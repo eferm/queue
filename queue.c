@@ -11,7 +11,6 @@
 
 #include "queue.h"
 #include <stdlib.h>
-#include <stdio.h>
 
 /*
  * Queue, the type for a priority queue
@@ -49,16 +48,14 @@ typedef struct qelemstruct *Element;
  */
 Queue new_queue()
 {
-	Element p_element = (Element) malloc(sizeof(Element));
-	Element element = p_element;
-	element->next = element;			// points to itself
-	element->prev = element;			// points to itself
-	element->prio = 0;
-	element->data = 0;
+	Element null_elem = (Element) malloc(sizeof(Element));
+	null_elem->next = null_elem;			// points to itself
+	null_elem->prev = null_elem;			// points to itself
+	null_elem->prio = 0;
+	null_elem->data = 0;
 	
-	Queue p_queue = (Queue) malloc(sizeof(Queue));
-	Queue queue = p_queue;
-	queue->head = element;				// head always points to start element
+	Queue queue = (Queue) malloc(sizeof(Queue));
+	queue->head = null_elem;				// head always points to null_elem
 	queue->length = 0;
 	
 	return queue;
@@ -100,29 +97,21 @@ int size(Queue q)
  */
 void add(Queue q, int priority, DATA *d)
 {
-	Element p_element = (Element) malloc(sizeof(Element));
-	Element element = p_element;
+	Element element = (Element) malloc(sizeof(Element));
 	element->prio = priority;
 	element->data = d;
 	
 	Iterator it = new_iterator(q);
 	
-	// point to first element with smaller or equal prio than given prio
-	while (it->curr->prio > element->prio)
-		go_to_next(it);
-
-	// if equal prio, but greater than 0, points to first smaller
+	// loop until smaller element found
 	if (element->prio != 0)
 	{
-		while (it->curr->prio == element->prio)
+		while (!(it->curr->prio < element->prio))
 			go_to_next(it);
 		go_to_previous(it);
 	}
-	else
-	{
-		// if 0
+	else									// if 0 simply go to last
 		go_to_last(it);
-	}
 	
 	it->curr->next->prev = element;			// connect element with "next"
 	element->next = it->curr->next;			// connect element with "next"
@@ -159,8 +148,7 @@ void remove_first(Queue q)
  */
 Iterator new_iterator(Queue q)
 {
-	Iterator p_it = (Iterator) malloc(sizeof(Iterator));
-	Iterator it = p_it;
+	Iterator it = (Iterator) malloc(sizeof(Iterator));
 	it->q = q;
 	it->curr = q->head->next;
 	
@@ -201,7 +189,7 @@ void go_to_last(Iterator it)
  */
 void go_to_next(Iterator it)
 {
-	if (it->curr != it->q->head)
+	if (ok(it))
 		it->curr = it->curr->next;
 }
 
@@ -210,7 +198,7 @@ void go_to_next(Iterator it)
  */
 void go_to_previous(Iterator it)
 {
-	if (it->curr != it->q->head)
+	if (ok(it))
 		it->curr = it->curr->prev;
 }
 
@@ -227,7 +215,7 @@ DATA *get_current(Iterator it)
  */
 void change_current(Iterator it, DATA *d)
 {
-	if (it->curr != it->q->head)
+	if (ok(it))
 		it->curr->data = d;
 }
 
@@ -236,7 +224,7 @@ void change_current(Iterator it, DATA *d)
  */
 void remove_current(Iterator it)
 {
-	if (it->curr != it->q->head)
+	if (ok(it))
 	{
 		it->curr->next->prev = it->curr->prev;
 		it->curr->prev->next = it->curr->next;
@@ -265,4 +253,12 @@ void find(Iterator it, DATA *d)
 	
 	if (get_current(it) != d)
 		it->curr = 0;
+}
+
+/*
+ * ok returns 1 if Iterator does NOT point to queue's head
+ */
+int ok(Iterator it)
+{
+	return it->curr != it->q->head;
 }
