@@ -42,6 +42,7 @@ struct qiteratorstruct
 };
 
 typedef struct qelemstruct *Element;
+int ok(Iterator it);
 
 /*
  * Allocates memory and initializes Queue and starting Element
@@ -66,6 +67,8 @@ Queue new_queue()
  */
 void delete_queue(Queue q)
 {
+	clear(q);
+	free(q->head);
 	free(q);
 }
 
